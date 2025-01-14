@@ -8,7 +8,7 @@ import org.ekstep.language.measures.entity.WordComplexity;
 import org.ekstep.language.measures.meta.OrthographicVectors;
 import org.ekstep.language.measures.meta.PhonologicVectors;
 import org.ekstep.language.measures.meta.SyllableMap;
-
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +21,7 @@ public class WordMeasures {
         SyllableMap.loadSyllables("hi");
         SyllableMap.loadSyllables("ka");
         SyllableMap.loadSyllables("ta");
+        SyllableMap.loadSyllables("gu");
     }
 
     public static WordComplexity getWordComplexity(String language, String word) {
@@ -41,76 +42,117 @@ public class WordMeasures {
         wc.setPhonicComplexity(0.0);
         String notation = "";
         String unicode = "";
+        
         Integer[] orthoVector = new Integer[OrthographicVectors.getVectorCount(language)];
+        System.out.println("orthoVector---After"+orthoVector.toString());
         Integer[] phonicVector = new Integer[PhonologicVectors.getVectorCount(language)];
+        System.out.println("phonicVector---After"+phonicVector.toString());
         for (Syllable s : syllables) {
             notation += s.getCode();
             for (String uc : s.getUnicodes()) {
                 unicode += ("\\" + uc);
             }
             unicode += " ";
+            System.out.println("language---"+language);
+           
             getSyllableValues(language, s, orthoVector, phonicVector, wc);
+            System.out.println("s---"+s);
         }
         wc.setUnicode(unicode.trim());
+        System.out.println("s1---");
         wc.setNotation(notation);
+        System.out.println("s2---");
         wc.setOrthoVec(orthoVector);
+        System.out.println("s3---");
         wc.setPhonicVec(phonicVector);
+        System.out.println("s4---");
         wc.setUnicodeTypeMap(getUnicodeTypeMap(language, word));
+        System.out.println("s5---");
         return wc;
     }
 
     private static void getSyllableValues(String language, Syllable s, Integer[] orthoVector, Integer[] phonicVector,
             WordComplexity wc) {
+        // System.out.println("orthoVector: " + Arrays.toString(orthoVector));
+        // System.out.println("phonicVector: " + Arrays.toString(phonicVector));
+
         List<String> unicodes = s.getUnicodes();
         Integer[] vec1 = null;
         Integer[] vec2 = null;
         Double[] orthoWeights = OrthographicVectors.getWeightage(language);
         Double[] phonicWeights = PhonologicVectors.getWeightage(language);
+       
         Double orthoComplexity = 0.0;
         Double phonicComplexity = 0.0;
         Map<String, Double[]> orthoWeightMap = new HashMap<String, Double[]>();
         Map<String, Double[]> weights = new HashMap<String, Double[]>();
         for (String uc : unicodes) {
+            System.out.println("1------ "+phonicWeights.length);
             Integer[] v1 = OrthographicVectors.getOrthographicVector(language, uc);
+            
             orthoComplexity += VectorUtil.dotProduct(v1, orthoWeights);
+            System.out.println("2------ ");
+
             int orthoIncr = OrthographicVectors.getIncrement(language, uc);
+             System.out.println("3------ ");
+
             orthoComplexity += (orthoComplexity * orthoIncr / 100);
             vec1 = VectorUtil.addVector(vec1, v1);
-            orthoWeightMap.put(uc, VectorUtil.dotMatrix(v1, orthoWeights, orthoIncr));
+             System.out.println("4------ ");
 
+            orthoWeightMap.put(uc, VectorUtil.dotMatrix(v1, orthoWeights, orthoIncr));
+             System.out.println("4.1------ "+language);
+             System.out.println("4.2------ "+uc);
             Integer[] v2 = PhonologicVectors.getPhonologicVector(language, uc);
+            System.out.println("4.3------ "+Arrays.toString(v2));
+            System.out.println("4.4------ "+Arrays.toString(phonicWeights));
             phonicComplexity += VectorUtil.dotProduct(v2, phonicWeights);
+             System.out.println("5------ ");
+
             int phonicIncr = PhonologicVectors.getIncrement(language, uc);
             phonicComplexity += (phonicComplexity * phonicIncr / 100);
+             System.out.println("6------ ");
+
             vec2 = VectorUtil.addVector(vec2, v2);
+            System.out.println("7------ ");
             weights.put(uc, VectorUtil.dotMatrix(v2, phonicWeights, phonicIncr));
         }
         for (int i = 0; i < unicodes.size(); i++) {
+             System.out.println("8------ ");
             for (int j = i + 1; j < unicodes.size(); j++) {
                 Double[] orthoDiffComplexity = VectorUtil.difference(orthoWeightMap.get(unicodes.get(i)),
                         weights.get(orthoWeightMap.get(j)));
+                 System.out.println("9------ ");
                 orthoComplexity += VectorUtil.sum(orthoDiffComplexity);
 
                 Double[] diffComplexity = VectorUtil.difference(weights.get(unicodes.get(i)),
                         weights.get(unicodes.get(j)));
+                 System.out.println("10------ ");
                 phonicComplexity += VectorUtil.sum(diffComplexity);
             }
         }
         for (int i = 0; i < unicodes.size(); i++) {
+             System.out.println("11------ ");
             for (int j = i + 1; j < unicodes.size(); j++) {
                 Double[] orthoDotComplexity = VectorUtil.dotProduct(orthoWeightMap.get(unicodes.get(i)),
                         orthoWeightMap.get(unicodes.get(j)));
+                     System.out.println("12------ ");
                 orthoComplexity += VectorUtil.sum(orthoDotComplexity);
 
                 Double[] dotComplexity = VectorUtil.dotProduct(weights.get(unicodes.get(i)),
                         weights.get(unicodes.get(j)));
+                         System.out.println("13------ ");
                 phonicComplexity += VectorUtil.sum(dotComplexity);
             }
         }
         orthoVector = VectorUtil.addVector(orthoVector, vec1);
+         System.out.println("14------ ");
         phonicVector = VectorUtil.addVector(phonicVector, vec2);
+         System.out.println("15------ ");
         wc.setOrthoComplexity(wc.getOrthoComplexity() + orthoComplexity);
+         System.out.println("16------ ");
         wc.setPhonicComplexity(wc.getPhonicComplexity() + phonicComplexity);
+         System.out.println("17------ ");
     }
 
     private static List<Syllable> getSyllables(String language, String word) {
