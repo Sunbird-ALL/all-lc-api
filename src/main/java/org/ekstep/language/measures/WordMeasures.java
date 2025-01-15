@@ -8,7 +8,6 @@ import org.ekstep.language.measures.entity.WordComplexity;
 import org.ekstep.language.measures.meta.OrthographicVectors;
 import org.ekstep.language.measures.meta.PhonologicVectors;
 import org.ekstep.language.measures.meta.SyllableMap;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
