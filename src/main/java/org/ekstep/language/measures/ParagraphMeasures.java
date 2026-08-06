@@ -30,6 +30,7 @@ public class ParagraphMeasures {
         SyllableMap.loadSyllables("ta");
         SyllableMap.loadSyllables("gu");
         SyllableMap.loadSyllables("or");
+        SyllableMap.loadSyllables("ne");
     }
 
 
